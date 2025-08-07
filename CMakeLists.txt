@@ -11,6 +11,7 @@ CPMAddPackage(
 
 add_executable(${PROJECT_NAME}
   source/main.cpp
+  source/sandbox.cpp
 )
 
 target_compile_options(${PROJECT_NAME} PRIVATE
