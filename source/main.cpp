@@ -3,12 +3,16 @@
 #include <3ds.h>
 #include <citro2d.h>
 
+#include <chrono>
+#include <thread>
+
 #define TOP_WIDTH      400
 #define BOTTOM_WIDTH   320
 #define SCREEN_HEIGHT  240
 
 int main()
 {
+    srand(time(NULL));
     romfsInit();
     gfxInitDefault();
     C3D_Init(C3D_DEFAULT_CMDBUF_SIZE);
@@ -38,6 +42,8 @@ int main()
         sandbox.draw();
 
         C3D_FrameEnd(0);
+
+        std::this_thread::sleep_for(std::chrono::duration<float>(1.0f / 3.0f));
     }
 
     cfguExit();

@@ -22,7 +22,7 @@ Sandbox::Sandbox(UVec2 screen_size, size_t scale)
 
     texture_data = (u32*) linearAlloc(texture_size.x * texture_size.y * sizeof(u32));
     for (size_t i = 0; i < texture_size.x * texture_size.y; i++) {
-        texture_data[i] = 0x000000FF;
+        texture_data[i] = 0x00000000;
     }
 
     C3D_TexInit(&texture, texture_size.x, texture_size.y, GPU_RGBA8);
@@ -91,8 +91,11 @@ void Sandbox::update() {
                 std::swap(cells[center], cells[down]);
                 cells[down].moved = true;
             } else if (
-                (can_move_down_left = type & 0b1 && y < logical_size.y - 1 && x > 0 && can_move(center, down_left))
-                || (can_move_down_right = type & 0b1 && y < logical_size.y - 1 && x < logical_size.x - 1 && can_move(center, down_right))
+                [&]() {
+                    can_move_down_left = type & 0b1 && y < logical_size.y - 1 && x > 0 && can_move(center, down_left);
+                    can_move_down_right = type & 0b1 && y < logical_size.y - 1 && x < logical_size.x - 1 && can_move(center, down_right);
+                    return can_move_down_left || can_move_down_right;
+                } ()
             ) {
                 if (rand() % 2 == 0) {
                     if (can_move_down_left) {
@@ -112,8 +115,11 @@ void Sandbox::update() {
                     }
                 }
             } else if (
-                (can_move_left = type & 0b10 && x > 0 && can_move(center, left))
-                || (can_move_right = type & 0b10 && x < logical_size.x - 1 && can_move(center, right))
+                [&]() {
+                    can_move_left = type & 0b10 && x > 0 && can_move(center, left);
+                    can_move_right = type & 0b10 && x < logical_size.x - 1 && can_move(center, right);
+                    return can_move_left || can_move_right;
+                } ()
             ) {
                 if (rand() % 2 == 0) {
                     if (can_move_left) {
@@ -146,5 +152,18 @@ void Sandbox::update() {
 }
 
 void Sandbox::draw() const {
-    C2D_DrawImageAt(image, 0.0f, 0.0f, 0.0f, nullptr, scale, scale);
+    for (size_t y = 0; y < logical_size.y; y++) {
+        for (size_t x = 0; x < logical_size.x; x++) {
+            C2D_DrawRectSolid(
+                x * scale,
+                y * scale,
+                0.0f,
+                scale,
+                scale,
+                cells[y * logical_size.x + x].definition.color
+            );
+        }
+    }
+
+    // C2D_DrawImageAt(image, 0.0f, 0.0f, 0.0f, nullptr, scale, scale);
 }
