@@ -1,6 +1,8 @@
 #include <3ds.h>
 #include <RIP/C3D.h>
 #include <citro2d.h>
+#include <chrono>
+#include <thread>
 
 #define TOP_WIDTH      400
 #define BOTTOM_WIDTH   320
@@ -37,9 +39,9 @@ int main()
             size_t i = y * TEXTURE_WIDTH + x;
 
             if (rand() % 4 == 0) {
-                data[i] = 0xFFFFFFFF;
+                new_data[i] = 0xFFFFFFFF;
             } else {
-                data[i] = 0x000000FF;
+                new_data[i] = 0x000000FF;
             }
         }
     }
@@ -68,6 +70,13 @@ int main()
         if (kDown & KEY_START)
             break;
 
+        C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
+        C2D_TargetClear(top, C2D_Color32f(0.1f, 0.1f, 0.1f, 1.0f));
+        C2D_SceneBegin(top);
+
+        u32* old_data = data;
+        data = new_data;
+        new_data = old_data;
         memcpy(new_data, data, TEXTURE_SIZE * 4);
         for (size_t y = 0; y < LOGICAL_HEIGHT; y++) {
             for (size_t x = 0; x < LOGICAL_WIDTH; x++) {
@@ -90,13 +99,8 @@ int main()
                 }
             }
         }
-        memcpy(data, new_data, TEXTURE_SIZE * 4);
 
-        ripConvertAndLoadC3DTexImage(&texture, data, (GPU_TEXFACE) 0, 0);
-
-        C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
-        C2D_TargetClear(top, C2D_Color32f(0.1f, 0.1f, 0.1f, 1.0f));
-        C2D_SceneBegin(top);
+        ripConvertAndLoadC3DTexImage(&texture, new_data, (GPU_TEXFACE) 0, 0);
 
         C2D_DrawImageAt(image, 0.0f, 0.0f, 0.0f, nullptr, TEXTURE_SCALE, TEXTURE_SCALE);
 
